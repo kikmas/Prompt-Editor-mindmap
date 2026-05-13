@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>V  i  b  e  E  d  i  t  o  r v4.6 - Live Edit Sync</title>
+    <title>Vibe Editor v4.8 - Custom Relation Map</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -24,8 +24,8 @@
     <div class="max-w-screen-2xl mx-auto h-full flex flex-col">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-black pb-4 mb-6">
             <div>
-                <h1 class="text-5xl font-black  tracking-tighter uppercase leading-none">Vibe_Editor_v4.6</h1>
-                <p class="text-[10px] font-mono tracking-widest mt-2 uppercase opacity-70">Live Edit & Tree-Map Sync</p>
+                <h1 class="text-5xl font-black tracking-tighter uppercase leading-none">Vibe_Editor_v4.8</h1>
+                <p class="text-[10px] font-mono tracking-widest mt-2 uppercase opacity-70">Custom Relation & Manual Connection</p>
             </div>
             <div class="flex gap-2 mt-4 md:mt-0">
                 <button onclick="exportFile()" class="px-3 py-1 border-2 border-black font-bold hover:bg-green-400 text-[10px] uppercase">Save</button>
@@ -43,19 +43,28 @@
                     <h2 class="text-sm font-black uppercase mb-2 italic">1. Add Vibe</h2>
                     <div id="target-indicator" class="mb-2 text-[9px] font-black uppercase text-blue-600">Target: Root</div>
                     <textarea id="specInput" class="w-full h-20 p-3 border-2 border-black focus:outline-none focus:bg-yellow-50 text-xs font-medium" placeholder="新しい仕様を入力..."></textarea>
-                    <div class="flex gap-2 mt-3">
-                        <button onclick="addSpec()" class="flex-1 bg-black text-white py-2 text-xs font-black uppercase tracking-widest">Add to Target</button>
-                        <button onclick="setTarget(null)" class="px-3 border-2 border-black font-bold text-[9px] uppercase">Clear</button>
+                    <button onclick="addSpec()" class="w-full mt-3 bg-black text-white py-2 text-xs font-black uppercase tracking-widest">Add to Target</button>
+                </div>
+
+                <div class="neo-brutalism p-4 flex-shrink-0 bg-gray-50">
+                    <h2 class="text-[10px] font-black uppercase mb-2 italic">Custom Connection (Relation Line)</h2>
+                    <div class="flex gap-2 items-center">
+                        <select id="connFrom" class="flex-1 text-[9px] border border-black p-1"></select>
+                        <span class="text-[10px]">→</span>
+                        <select id="connTo" class="flex-1 text-[9px] border border-black p-1"></select>
+                        <button onclick="addRelation()" class="px-3 py-1 bg-black text-white text-[9px] font-bold uppercase">Link</button>
+                        <button onclick="clearRelations()" class="px-2 py-1 border border-black text-[9px] font-bold hover:bg-red-100">CLR</button>
                     </div>
                 </div>
+
                 <div class="neo-brutalism p-5 flex-1 overflow-y-auto">
-                    <h2 class="text-sm font-black uppercase mb-4 italic">2. Hierarchy (Edit & Drag)</h2>
+                    <h2 class="text-sm font-black uppercase mb-4 italic">3. Hierarchy</h2>
                     <div id="tree-container" class="space-y-3 pb-20"></div>
                 </div>
             </div>
 
             <div class="lg:col-span-8 flex flex-col overflow-hidden">
-                <h2 class="text-lg font-black uppercase italic mb-2">3. Mind Map View</h2>
+                <h2 class="text-lg font-black uppercase italic mb-2">4. Interactive Mind Map</h2>
                 <div id="map-wrapper" class="neo-brutalism flex-1 relative">
                     <div id="mermaid-viewer"></div>
                 </div>
@@ -64,7 +73,8 @@
     </div>
 
     <script>
-        let specs = JSON.parse(localStorage.getItem('vibe-tree-data-v4.6')) || [];
+        let specs = JSON.parse(localStorage.getItem('vibe-tree-v4.8')) || [];
+        let relations = JSON.parse(localStorage.getItem('vibe-rels-v4.8')) || [];
         let currentTargetId = null;
         let zoomHandler;
 
@@ -73,29 +83,39 @@
             theme: 'base',
             securityLevel: 'loose',
             flowchart: { curve: 'basis', htmlLabels: true },
-            themeVariables: { primaryColor: '#ffffff', edgeColor: '#000000', fontSize: '14px', fontFamily: 'Inter' }
+            themeVariables: { primaryColor: '#ffffff', edgeColor: '#000000', fontSize: '13px', fontFamily: 'Inter' }
         });
 
-        // 編集機能のコア
+        function addRelation() {
+            const from = document.getElementById('connFrom').value;
+            const to = document.getElementById('connTo').value;
+            if (from && to && from !== to) {
+                relations.push({ from, to });
+                updateAll();
+            }
+        }
+
+        function clearRelations() { if(confirm('Clear all links?')) { relations = []; updateAll(); } }
+
+        function updateSelectors() {
+            const f = document.getElementById('connFrom');
+            const t = document.getElementById('connTo');
+            const html = specs.map(s => `<option value="${s.id}">${s.content.substring(0,20)}</option>`).join('');
+            f.innerHTML = html; t.innerHTML = html;
+        }
+
         window.editNode = (id) => {
             const node = specs.find(s => s.id === id);
             if (!node) return;
-            const newContent = prompt("仕様内容を編集:", node.content);
-            if (newContent !== null && newContent.trim() !== "") {
-                node.content = newContent.trim();
-                updateAll();
-            }
+            const res = prompt("編集:", node.content);
+            if (res) { node.content = res.trim(); updateAll(); }
         };
 
-        function setTarget(id, fromMap = false) {
+        function setTarget(id) {
             currentTargetId = id;
             if (id) {
                 const node = specs.find(s => s.id === id);
                 document.getElementById('target-indicator').innerText = `Target: ${node.content.substring(0, 30)}`;
-                if (fromMap) {
-                    const el = document.querySelector(`[data-id="${id}"]`);
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
             } else {
                 document.getElementById('target-indicator').innerText = `Target: Root`;
             }
@@ -103,14 +123,7 @@
             highlightMapNode(id);
         }
 
-        window.onMapNodeClick = (id) => setTarget(id, true);
-
-        function reparent(childId, parentId) {
-            let curr = parentId;
-            while(curr) { if (curr === childId) return; const n = specs.find(s => s.id === curr); curr = n ? n.parentId : null; }
-            const node = specs.find(s => s.id === childId);
-            if (node) { node.parentId = parentId; updateAll(); }
-        }
+        window.onMapNodeClick = (id) => setTarget(id);
 
         function addSpec() {
             const input = document.getElementById('specInput');
@@ -123,8 +136,10 @@
         }
 
         function updateAll() {
-            localStorage.setItem('vibe-tree-data-v4.6', JSON.stringify(specs));
+            localStorage.setItem('vibe-tree-v4.8', JSON.stringify(specs));
+            localStorage.setItem('vibe-rels-v4.8', JSON.stringify(relations));
             renderTree();
+            updateSelectors();
             renderMindmap();
         }
 
@@ -137,9 +152,8 @@
         function createNodeElement(spec, depth) {
             const wrapper = document.createElement('div');
             wrapper.className = depth > 0 ? 'indent-line mt-2' : 'mt-4';
-            const isSelected = spec.id === currentTargetId;
             const card = document.createElement('div');
-            card.className = `spec-node neo-brutalism p-3 ${isSelected ? 'is-target' : 'bg-white'}`;
+            card.className = `spec-node neo-brutalism p-3 ${spec.id === currentTargetId ? 'is-target' : 'bg-white'}`;
             card.dataset.id = spec.id;
             card.draggable = true;
             card.onclick = (e) => { e.stopPropagation(); setTarget(spec.id); };
@@ -147,13 +161,20 @@
             card.ondragend = () => card.style.opacity = '1';
             card.ondragover = (e) => { e.preventDefault(); card.classList.add('drop-over'); };
             card.ondragleave = () => card.classList.remove('drop-over');
-            card.ondrop = (e) => { e.preventDefault(); card.classList.remove('drop-over'); const dId = e.dataTransfer.getData('text/plain'); if (dId !== spec.id) reparent(dId, spec.id); };
+            card.ondrop = (e) => { 
+                e.preventDefault(); 
+                const dId = e.dataTransfer.getData('text/plain'); 
+                if (dId !== spec.id) {
+                    const node = specs.find(s => s.id === dId);
+                    if (node) { node.parentId = spec.id; updateAll(); }
+                }
+            };
 
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-1">
                     <span class="text-[7px] font-mono opacity-40 uppercase">${spec.createdAt}</span>
                     <div class="flex gap-2">
-                        <button onclick="event.stopPropagation(); editNode('${spec.id}')" class="text-[9px] font-bold text-blue-500 hover:underline">EDIT</button>
+                        <button onclick="event.stopPropagation(); editNode('${spec.id}')" class="text-[9px] font-bold text-blue-500">EDIT</button>
                         <button onclick="event.stopPropagation(); deleteNode('${spec.id}')" class="text-[9px] font-bold text-red-400">DEL</button>
                     </div>
                 </div>
@@ -168,11 +189,19 @@
             const viewer = document.getElementById('mermaid-viewer');
             if (specs.length === 0) { viewer.innerHTML = ''; return; }
             let mCode = "graph LR\n  ROOT((PROJECT))\n";
+            
+            // 親子関係
             specs.forEach(s => {
                 const label = s.content.replace(/[\[\]\(\)\"\']/g, '');
                 const target = s.parentId ? s.parentId : "ROOT";
-                mCode += `  ${target} --> ${s.id}("${label}")\n  click ${s.id} onMapNodeClick\n`;
+                mCode += `  ${target} --- ${s.id}("${label}")\n  click ${s.id} onMapNodeClick\n`;
             });
+
+            // カスタム関連線 (image_2bb2d8の再現)
+            relations.forEach(r => {
+                mCode += `  ${r.from} -.-> ${r.to}\n`;
+            });
+
             try {
                 const { svg, bindFunctions } = await mermaid.render('m' + Date.now(), mCode);
                 viewer.innerHTML = svg;
@@ -191,10 +220,58 @@
         }
 
         function resetZoom() { d3.select("#map-wrapper").transition().duration(500).call(zoomHandler.transform, d3.zoomIdentity); }
-        function deleteNode(id) { if(confirm('Delete?')) { specs = specs.filter(s => s.id !== id); specs.forEach(s => { if(s.parentId === id) s.parentId = null; }); updateAll(); } }
-        function exportFile() { const b = new Blob([JSON.stringify(specs, null, 2)], {type:"application/json"}); const a = document.createElement("a"); a.href=URL.createObjectURL(b); a.download=`vibe_v4.6_${Date.now()}.json`; a.click(); }
-        function importFile(e) { const r = new FileReader(); r.onload=(ev)=>{ specs=JSON.parse(ev.target.result); updateAll(); }; r.readAsText(e.target.files[0]); }
-        function copyPrompt() { let t="仕様構造：\n"; const build=(pId,ind)=>{ specs.filter(s=>s.parentId===pId).forEach(s=>{ t+=`${ind}- ${s.content}\n`; build(s.id,ind+"  "); }); }; build(null,""); navigator.clipboard.writeText(t); alert("Prompt Copied!"); }
+        
+        function deleteNode(id) { 
+            if(confirm('Delete?')) { 
+                specs = specs.filter(s => s.id !== id); 
+                relations = relations.filter(r => r.from !== id && r.to !== id);
+                specs.forEach(s => { if(s.parentId === id) s.parentId = null; }); 
+                updateAll(); 
+            } 
+        }
+
+        function highlightMapNode(id) {
+            document.querySelectorAll('.node rect').forEach(r => { r.style.stroke = "#000"; r.style.strokeWidth = "1px"; });
+            if (id) {
+                const el = document.querySelector(`[id^="flowchart-${id}-"] rect`);
+                if (el) { el.style.stroke = "#fef08a"; el.style.strokeWidth = "4px"; }
+            }
+        }
+
+        function exportFile() { 
+            const data = { specs, relations };
+            const b = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"}); 
+            const a = document.createElement("a"); a.href=URL.createObjectURL(b); a.download=`vibe_v4.8.json`; a.click(); 
+        }
+
+        function importFile(e) { 
+            const r = new FileReader(); 
+            r.onload=(ev)=>{ 
+                const d = JSON.parse(ev.target.result); 
+                specs = d.specs || []; 
+                relations = d.relations || []; 
+                updateAll(); 
+            }; 
+            r.readAsText(e.target.files[0]); 
+        }
+
+        function copyPrompt() {
+            let t = "【仕様ツリー】\n";
+            const build = (pId, ind) => {
+                specs.filter(s => s.parentId === pId).forEach(s => {
+                    t += `${ind}- ${s.content}\n`;
+                    build(s.id, ind + "  ");
+                });
+            };
+            build(null, "");
+            t += "\n【関連フロー】\n";
+            relations.forEach(r => {
+                const f = specs.find(s => s.id === r.from);
+                const to = specs.find(s => s.id === r.to);
+                if (f && to) t += `- ${f.content} → ${to.content}\n`;
+            });
+            navigator.clipboard.writeText(t); alert("Prompt Copied!");
+        }
 
         updateAll();
     </script>
