@@ -1,0 +1,62 @@
+[
+  {
+    "id": "root_001",
+    "content": "エスアンドエス プロットマスター v1.3",
+    "parentId": null,
+    "createdAt": "2026-05-13 14:30:00"
+  },
+  {
+    "id": "ui_001",
+    "content": "UIデザイン: ダークテーマ / JetBrains Monoフォント",
+    "parentId": "root_001",
+    "createdAt": "2026-05-13 14:30:05"
+  },
+  {
+    "id": "logic_001",
+    "content": "入力系: 座標データ (点名 X Y) のパース処理",
+    "parentId": "root_001",
+    "createdAt": "2026-05-13 14:30:10"
+  },
+  {
+    "id": "logic_002",
+    "content": "計算系: 座標法による面積計算 (sq.m表示)",
+    "parentId": "logic_001",
+    "createdAt": "2026-05-13 14:30:15"
+  },
+  {
+    "id": "logic_003",
+    "content": "計算系: 点間距離の自動算出",
+    "parentId": "logic_001",
+    "createdAt": "2026-05-13 14:30:20"
+  },
+  {
+    "id": "view_001",
+    "content": "表示設定: 座標系切り替え (測量/数学)",
+    "parentId": "root_001",
+    "createdAt": "2026-05-13 14:30:25"
+  },
+  {
+    "id": "view_002",
+    "content": "表示設定: サークル・ドットサイズの可変制御",
+    "parentId": "view_001",
+    "createdAt": "2026-05-13 14:30:30"
+  },
+  {
+    "id": "view_003",
+    "content": "Canvas描画: オートスケール・センタリング機能",
+    "parentId": "view_001",
+    "createdAt": "2026-05-13 14:30:35"
+  },
+  {
+    "id": "output_001",
+    "content": "出力系: DXFファイルエクスポート",
+    "parentId": "root_001",
+    "createdAt": "2026-05-13 14:30:40"
+  },
+  {
+    "id": "output_002",
+    "content": "DXFオプション: 点名/距離/図形の個別出力選択",
+    "parentId": "output_001",
+    "createdAt": "2026-05-13 14:30:45"
+  }
+]

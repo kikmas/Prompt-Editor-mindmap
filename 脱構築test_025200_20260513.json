@@ -1,0 +1,98 @@
+[
+  {
+    "id": "root_2026",
+    "content": "S&S PLOTTER (エスアンドエス プロッター) v2.0",
+    "parentId": null,
+    "createdAt": "2026-05-13 03:00:00"
+  },
+  {
+    "id": "design_001",
+    "content": "DESIGN: ハローキティ風 × インパクト (Bauhaus/Honest Design)",
+    "parentId": "root_2026",
+    "createdAt": "2026-05-13 03:00:05"
+  },
+  {
+    "id": "design_002",
+    "content": "フォント: インパクト (見出し) / JetBrains Mono (データ表示)",
+    "parentId": "design_001",
+    "createdAt": "2026-05-13 03:00:10"
+  },
+  {
+    "id": "design_003",
+    "content": "UI: ダークテーマ / マッシブな英語・カタカナ表記",
+    "parentId": "design_001",
+    "createdAt": "2026-05-13 03:00:15"
+  },
+  {
+    "id": "logic_001",
+    "content": "CORE LOGIC: SoC方式による測量計算エンジン",
+    "parentId": "root_2026",
+    "createdAt": "2026-05-13 03:00:20"
+  },
+  {
+    "id": "logic_002",
+    "content": "座標定義: 北南=X / 西東=Y (測量・数学座標系切替)",
+    "parentId": "logic_001",
+    "createdAt": "2026-05-13 03:00:25"
+  },
+  {
+    "id": "logic_003",
+    "content": "自動アルゴリズム: 交差なき結線・点間距離算出",
+    "parentId": "logic_001",
+    "createdAt": "2026-05-13 03:00:30"
+  },
+  {
+    "id": "logic_004",
+    "content": "計算機能: 座標法による面積計算 (sq.m表示)",
+    "parentId": "logic_001",
+    "createdAt": "2026-05-13 03:00:35"
+  },
+  {
+    "id": "ui_canvas_001",
+    "content": "VIEW: インタラクティブ・キャンバス機能",
+    "parentId": "root_2026",
+    "createdAt": "2026-05-13 03:00:40"
+  },
+  {
+    "id": "ui_canvas_002",
+    "content": "操作: ホイール回転ズーム / センタークリックでパン",
+    "parentId": "ui_canvas_001",
+    "createdAt": "2026-05-13 03:00:45"
+  },
+  {
+    "id": "ui_canvas_003",
+    "content": "表示制御: 点名・距離・地番の表示/非表示トグル",
+    "parentId": "ui_canvas_001",
+    "createdAt": "2026-05-13 03:00:50"
+  },
+  {
+    "id": "ui_canvas_004",
+    "content": "機能: オートスケール・原点復帰・ズーム感度調整",
+    "parentId": "ui_canvas_001",
+    "createdAt": "2026-05-13 03:00:55"
+  },
+  {
+    "id": "io_001",
+    "content": "I/O: マルチソース入力 & DXF出力",
+    "parentId": "root_2026",
+    "createdAt": "2026-05-13 03:01:00"
+  },
+  {
+    "id": "io_002",
+    "content": "入力: 表形式直接入力 / CSV・Excelドラッグ&ドロップ",
+    "parentId": "io_001",
+    "createdAt": "2026-05-13 03:01:05"
+  },
+  {
+    "id": "io_003",
+    "content": "出力: DXFエクスポート (点・ラベル・図形レイヤー選択)",
+    "parentId": "io_001",
+    "createdAt": "2026-05-13 03:01:10"
+  },
+  {
+    "id": "app_ref_001",
+    "content": "REFERENCE: Trend-One 測量操作系踏襲",
+    "parentId": "root_2026",
+    "createdAt": "2026-05-13 03:01:15"
+  }
+]

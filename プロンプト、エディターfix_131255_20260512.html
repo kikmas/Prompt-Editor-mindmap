@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Vibe Mind-Tree Editor v3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap');
+        body { background-color: #fafafa; color: #1a1a1a; font-family: 'Inter', sans-serif; }
+        .neo-brutalism { background: white; border: 3px solid #000; box-shadow: 8px 8px 0px 0px #000; transition: all 0.2s ease; }
+        .neo-brutalism:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px 0px #000; }
+        .spec-node { cursor: grab; position: relative; }
+        .drop-over { background-color: #fef08a !important; border-style: dashed !important; }
+        .indent-line { position: relative; margin-left: 1.5rem; }
+        .indent-line::before { content: ""; position: absolute; left: -0.75rem; top: 0; bottom: 0; width: 2px; background: #000; }
+        #mermaid-viewer svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-black pb-6 mb-10">
+            <div>
+                <h1 class="text-5xl font-black italic tracking-tighter uppercase leading-none">Vibe Mind-Tree v3</h1>
+                <p class="text-sm font-mono tracking-widest mt-2 uppercase opacity-70">Portable Logic Tree System</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                <!-- ファイル操作系 -->
+                <button onclick="exportFile()" class="px-4 py-2 border-2 border-black font-bold hover:bg-green-500 transition">SAVE VIBE (.json)</button>
+                <label class="px-4 py-2 border-2 border-black font-bold hover:bg-blue-500 transition cursor-pointer">
+                    LOAD VIBE <input type="file" id="importFile" class="hidden" accept=".json" onchange="importFile(event)">
+                </label>
+                <button onclick="copyPrompt()" class="px-6 py-2 bg-black text-white font-bold hover:bg-zinc-800 transition shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">COPY PROMPT</button>
+                <button onclick="resetAll()" class="px-4 py-2 border-2 border-black font-bold text-red-500 hover:bg-red-500 hover:text-white transition">RESET</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div class="lg:col-span-5 space-y-8">
+                <div class="neo-brutalism p-6">
+                    <h2 class="text-lg font-black uppercase mb-4 tracking-tighter italic">1. Add Raw Vibe</h2>
+                    <textarea id="specInput" class="w-full h-32 p-4 border-2 border-black focus:outline-none focus:bg-yellow-50 text-sm font-medium" placeholder="仕様を入力..."></textarea>
+                    <button onclick="addSpec()" class="w-full mt-4 bg-black text-white py-3 font-black uppercase tracking-widest hover:bg-zinc-800">Push to Root</button>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black uppercase mb-4 tracking-tighter italic">2. Logic Structure</h2>
+                    <div id="tree-container" class="space-y-4 min-h-[400px] pb-20"></div>
+                </div>
+            </div>
+            <div class="lg:col-span-7">
+                <div class="sticky top-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-black uppercase tracking-tighter italic">3. Mind Map Visualization</h2>
+                        <span class="text-[10px] font-mono bg-black text-white px-2 py-1">AUTO-SYNC</span>
+                    </div>
+                    <div id="mermaid-viewer" class="neo-brutalism bg-white min-h-[650px] flex justify-center items-center overflow-auto p-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let specs = JSON.parse(localStorage.getItem('vibe-tree-data')) || [];
+        
+        mermaid.initialize({ 
+            startOnLoad: false, 
+            theme: 'base',
+            themeVariables: { primaryColor: '#ffffff', edgeColor: '#000000', fontSize: '14px', fontFamily: 'Inter' }
+        });
+
+        function addSpec() {
+            const input = document.getElementById('specInput');
+            if (!input.value.trim()) return;
+            specs.push({ id: 'node-' + Date.now(), content: input.value.trim().replace(/\n/g, ' '), parentId: null, createdAt: new Date().toLocaleTimeString() });
+            input.value = '';
+            updateAll();
+        }
+
+        // --- ファイル保存・読込機能 ---
+        function exportFile() {
+            if (specs.length === 0) return alert("保存するデータがありません");
+            const dataStr = JSON.stringify(specs, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `vibe_project_${new Date().getTime()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        specs = importedData;
+                        updateAll();
+                        alert("プロジェクトを読み込みました");
+                    }
+                } catch (err) {
+                    alert("ファイルの読み込みに失敗しました");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function updateAll() {
+            localStorage.setItem('vibe-tree-data', JSON.stringify(specs));
+            renderTree();
+            renderMindmap();
+        }
+
+        function renderTree() {
+            const container = document.getElementById('tree-container');
+            container.innerHTML = '';
+            const roots = specs.filter(s => !s.parentId);
+            if (roots.length === 0) {
+                container.innerHTML = '<div class="p-10 border-2 border-dashed border-gray-300 text-center text-gray-400 font-mono italic text-xs">Waiting for your vibe...</div>';
+                return;
+            }
+            roots.forEach(root => container.appendChild(createNodeElement(root, 0)));
+        }
+
+        function createNodeElement(spec, depth) {
+            const wrapper = document.createElement('div');
+            wrapper.className = depth > 0 ? 'indent-line mt-3' : 'mt-4';
+            const card = document.createElement('div');
+            card.className = 'spec-node neo-brutalism p-4 bg-white hover:bg-gray-50';
+            card.draggable = true;
+            card.dataset.id = spec.id;
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[9px] font-mono opacity-40">${spec.createdAt}</span>
+                    <div class="flex gap-2">
+                        ${spec.parentId ? `<button onclick="detachNode('${spec.id}')" class="text-[10px] font-bold text-blue-600">DETACH</button>` : ''}
+                        <button onclick="deleteNode('${spec.id}')" class="text-[10px] font-bold text-red-500">DEL</button>
+                    </div>
+                </div>
+                <p class="text-sm font-bold leading-tight">${spec.content}</p>
+            `;
+
+            card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', spec.id); card.classList.add('opacity-30'); });
+            card.addEventListener('dragend', () => card.classList.remove('opacity-30'));
+            card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('drop-over'); });
+            card.addEventListener('dragleave', () => card.classList.remove('drop-over'));
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drop-over');
+                const draggedId = e.dataTransfer.getData('text/plain');
+                if (draggedId !== spec.id) reparent(draggedId, spec.id);
+            });
+            wrapper.appendChild(card);
+            specs.filter(s => s.parentId === spec.id).forEach(child => wrapper.appendChild(createNodeElement(child, depth + 1)));
+            return wrapper;
+        }
+
+        function reparent(childId, parentId) {
+            let curr = parentId;
+            while(curr) { if (curr === childId) return; const n = specs.find(s => s.id === curr); curr = n ? n.parentId : null; }
+            const node = specs.find(s => s.id === childId);
+            if (node) { node.parentId = parentId; updateAll(); }
+        }
+
+        function detachNode(id) { const n = specs.find(s => s.id === id); if(n){ n.parentId = null; updateAll(); } }
+        function deleteNode(id) { specs = specs.filter(s => s.id !== id); specs.forEach(s => { if(s.parentId === id) s.parentId = null; }); updateAll(); }
+        function resetAll() { if(confirm('Clear all?')){ specs = []; updateAll(); } }
+
+        async function renderMindmap() {
+            const viewer = document.getElementById('mermaid-viewer');
+            if (specs.length === 0) { viewer.innerHTML = '<p class="text-gray-400 font-mono text-xs italic">No data.</p>'; return; }
+            let mCode = "mindmap\n  root((Project))\n";
+            const build = (pId, d) => {
+                specs.filter(s => s.parentId === pId).forEach(s => {
+                    const lbl = s.content.replace(/[()\[\]{}]/g, '').substring(0, 40);
+                    mCode += `${"  ".repeat(d+1)}${lbl}\n`;
+                    build(s.id, d + 1);
+                });
+            };
+            build(null, 1);
+            try { const { svg } = await mermaid.render('m' + Date.now(), mCode); viewer.innerHTML = svg; } catch (e) { console.error(e); }
+        }
+
+        function copyPrompt() {
+            let t = "以下の階層化された仕様を反映してください：\n\n";
+            const build = (pId, ind) => {
+                specs.filter(s => s.parentId === pId).forEach(s => { t += `${ind}- ${s.content}\n`; build(s.id, ind + "  "); });
+            };
+            build(null, "");
+            navigator.clipboard.writeText(t);
+            alert("Prompt Copied!");
+        }
+
+        updateAll();
+    </script>
+</body>
+</html>
